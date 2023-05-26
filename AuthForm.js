@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-
+import { useState, useRef, useContext } from "react";
+import AuthContext from "../Store/auth-context";
 import classes from "./AuthForm.module.css";
 
 const AuthForm = () => {
@@ -7,6 +7,8 @@ const AuthForm = () => {
   const passwordRef = useRef();
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+
+  const authCtx=useContext(AuthContext);
 
   const switchAuthModeHandler = () => {
     setIsLogin((prevState) => !prevState);
@@ -21,40 +23,41 @@ const AuthForm = () => {
 
     let url;
     if (isLogin) {
-      url="https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBZRt1EODmiryCwAf1Okgl9yEJS_vgdkkI";
+      url =
+        "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBZRt1EODmiryCwAf1Okgl9yEJS_vgdkkI";
     } else {
-      url="https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBZRt1EODmiryCwAf1Okgl9yEJS_vgdkkI";
+      url =
+        "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBZRt1EODmiryCwAf1Okgl9yEJS_vgdkkI";
     }
-    fetch(url
-        ,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            email: enteredEmail,
-            password: enteredPassword,
-            returnSecureToken: true,
-          }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      ).then((res)=> {
+    fetch(url, {
+      method: "POST",
+      body: JSON.stringify({
+        email: enteredEmail,
+        password: enteredPassword,
+        returnSecureToken: true,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
         setIsLoading(false);
         if (res.ok) {
           return res.json();
         } else {
           return res.json().then((data) => {
-              let errorMessage = data.error.message;
-              throw new Error(errorMessage);
+            let errorMessage = data.error.message;
+            throw new Error(errorMessage);
           });
         }
-      }).then((data)=>{
-        console.log(data);
       })
-      .catch((err)=>{
+      .then((data) => {
+        authCtx.login(data.idToken);
+      })
+      .catch((err) => {
         alert(err.message);
-      })
-    }
+      });
+  };
 
   return (
     <section className={classes.auth}>
